@@ -15,4 +15,4 @@ Sonnet only; never Opus. Primary checkout stays on `main`; branches in worktrees
 2. Then `-constraints` (disjointness, cardinality, domain/range, functional/inverse-functional declared in kinds).
 
 ## Holds / WAITs
-None.
+WAIT: mark draft PR #3 ready on the next UTC day (one PR per day) | check: gh pr view 3 --json isDraft,state,statusCheckRollup | wake: 2026-11-19T00:05:00Z
