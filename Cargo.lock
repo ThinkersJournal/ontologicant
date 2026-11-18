@@ -5,6 +5,9 @@ version = 4
 [[package]]
 name = "ontologicant-core"
 version = "0.0.1"
+dependencies = [
+ "semanticant-core",
+]
 
 [[package]]
 name = "ontologicant-graph"
@@ -12,3 +15,17 @@ version = "0.0.1"
 dependencies = [
  "ontologicant-core",
 ]
+
+[[package]]
+name = "ontologicant-kinds"
+version = "0.0.1"
+dependencies = [
+ "ontologicant-core",
+ "ontologicant-graph",
+]
+
+[[package]]
+name = "semanticant-core"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8832da794278643816036382b93c6b9865b59d49c7e2048cf0e7fd36c09acb3"

@@ -1,0 +1,16 @@
+[package]
+name = "ontologicant-kinds"
+description = "OntologicAnt kinds and relations: taxonomy closure, mereology with selectable axioms, declared relation properties and their closures"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+ontologicant-core = { version = "=0.0.1", path = "../ontologicant-core" }
+ontologicant-graph = { version = "=0.0.1", path = "../ontologicant-graph" }
+
+[lints]
+workspace = true

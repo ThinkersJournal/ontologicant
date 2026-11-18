@@ -6,13 +6,15 @@
 //! * [`RelationType`]: the name of a kind of relation. A plain string, never an English enum:
 //!   relation vocabularies are data.
 //! * [`Provenance`]: where an assertion came from, and whether it was asserted or derived.
-//! * [`Reason`] and [`Verdict`]: **temporary shim.** These are shaped like the sketch in SemanticAnt's spec
-//!   (section 3.1) and are replaced by the `semanticant-core` dependency once that crate is published
-//!   (PM ruling, 2026-11-18). Do not build on their exact shape.
+//! * [`Reason`] and [`Verdict`]: re-exported from `semanticant-core`, where every project in the family finds them
+//!   (PM ruling, 2026-11-18). Note that `semanticant_core::Provenance` is a different thing: the licence and credit of
+//!   a data pack. [`Provenance`] here records where one assertion came from.
 #![forbid(unsafe_code)]
 
 use std::fmt;
 use std::str::FromStr;
+
+pub use semanticant_core::{Reason, Verdict};
 
 macro_rules! id_type {
     ($(#[$m:meta])* $name:ident, $prefix:literal) => {
@@ -108,22 +110,4 @@ impl Provenance {
             origin: Origin::Derived,
         }
     }
-}
-
-/// One reason for a verdict. Temporary shim, see the crate docs.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Reason {
-    /// A stable machine-readable code.
-    pub code: String,
-    /// A human-readable explanation.
-    pub text: String,
-}
-
-/// A yes/no answer with the reasons for it. Temporary shim, see the crate docs.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Verdict {
-    /// The answer.
-    pub holds: bool,
-    /// Why.
-    pub reasons: Vec<Reason>,
 }
