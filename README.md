@@ -2,8 +2,9 @@
 
 Comprehensive tool libraries covering the whole field of ontology and ontological analysis.
 
-**Status: design only. Nothing here is usable yet.** The crate name `ontologicant` is reserved on crates.io at 0.0.0. The first deliverable is
-a written spec (`docs/SPEC-STEP1.md`), published here for review before any code is written.
+**Status: early.** Two crates are built and tested, neither published yet: `ontologicant-core` (stable ids, relation types, provenance) and
+`ontologicant-graph` (a labelled directed multigraph with a documented text form). The spec is `docs/SPEC-STEP1.md`; kinds, identity and
+constraints are not built. The crate name `ontologicant` is reserved on crates.io at 0.0.0.
 
 Part of the field-library layer of the AnalysAnt family: these libraries are toolsets that AnalysAnt's lenses (and other projects, such as
 SageAnt) use as dependencies. The standing rule (CireSnave, 2026-11-18): if a project needs a tool that falls in this field, the tool is
