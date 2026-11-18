@@ -1,0 +1,403 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//! `ontologicant-graph`: a labelled, directed multigraph of entities with stable ids.
+//!
+//! * Ids are never reused, including across [`Graph::to_text`] / [`Graph::from_text`].
+//! * Every listing is in id order, so output is deterministic.
+//! * [`GraphStore`] is the trait other stores can implement; [`Graph`] is the in-memory reference store.
+//!
+//! # Text format (version 1)
+//! Line oriented, fields separated by a TAB, `\\`, `\t`, `\n` and `\r` escaped inside a field:
+//! ```text
+//! ontologicant-graph 1
+//! N <next entity number> <next relation number>
+//! E <entity id> <label>
+//! R <relation id> <from> <to> <A|D> <relation type> <source>
+//! ```
+#![forbid(unsafe_code)]
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
+
+pub use ontologicant_core::{EntityId, Origin, Provenance, RelationId, RelationType};
+
+/// Which relations of an entity to follow.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Direction {
+    /// Relations that start at the entity.
+    Out,
+    /// Relations that end at the entity.
+    In,
+    /// Both.
+    Both,
+}
+
+/// One relation instance.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Relation {
+    /// Its id.
+    pub id: RelationId,
+    /// Source entity.
+    pub from: EntityId,
+    /// The kind of relation.
+    pub rtype: RelationType,
+    /// Target entity.
+    pub to: EntityId,
+    /// Where it came from.
+    pub provenance: Provenance,
+}
+
+/// Errors from graph operations and parsing.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum GraphError {
+    /// No entity with this id.
+    NoSuchEntity(EntityId),
+    /// No relation with this id.
+    NoSuchRelation(RelationId),
+    /// The text form is malformed.
+    Parse {
+        /// 1-based line number.
+        line: usize,
+        /// What is wrong.
+        message: String,
+    },
+}
+
+impl fmt::Display for GraphError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            GraphError::NoSuchEntity(id) => write!(f, "no such entity {id}"),
+            GraphError::NoSuchRelation(id) => write!(f, "no such relation {id}"),
+            GraphError::Parse { line, message } => write!(f, "line {line}: {message}"),
+        }
+    }
+}
+impl std::error::Error for GraphError {}
+
+/// What a store of entities and relations must offer. Other stores can implement it.
+pub trait GraphStore {
+    /// Add an entity; its id is never reused.
+    fn add_entity(&mut self, label: &str) -> EntityId;
+    /// Add a relation between two existing entities.
+    fn add_relation(
+        &mut self,
+        from: EntityId,
+        rtype: RelationType,
+        to: EntityId,
+        provenance: Provenance,
+    ) -> Result<RelationId, GraphError>;
+    /// Relations of `id` in the given direction as (relation, other end), in relation-id order.
+    /// A self-loop followed in `Both` appears once per direction it matches.
+    fn neighbours(
+        &self,
+        id: EntityId,
+        dir: Direction,
+    ) -> Result<Vec<(RelationId, EntityId)>, GraphError>;
+    /// Number of entities.
+    fn entity_count(&self) -> usize;
+    /// Number of relations.
+    fn relation_count(&self) -> usize;
+}
+
+/// The in-memory reference store.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Graph {
+    next_entity: u64,
+    next_relation: u64,
+    entities: BTreeMap<EntityId, String>,
+    relations: BTreeMap<RelationId, Relation>,
+    out: BTreeMap<EntityId, BTreeSet<RelationId>>,
+    inc: BTreeMap<EntityId, BTreeSet<RelationId>>,
+}
+
+impl Graph {
+    /// An empty graph.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// The label of an entity.
+    pub fn label(&self, id: EntityId) -> Result<&str, GraphError> {
+        self.entities
+            .get(&id)
+            .map(String::as_str)
+            .ok_or(GraphError::NoSuchEntity(id))
+    }
+
+    /// A relation by id.
+    pub fn relation(&self, id: RelationId) -> Result<&Relation, GraphError> {
+        self.relations
+            .get(&id)
+            .ok_or(GraphError::NoSuchRelation(id))
+    }
+
+    /// All entities in id order.
+    pub fn entities(&self) -> impl Iterator<Item = (EntityId, &str)> {
+        self.entities.iter().map(|(id, l)| (*id, l.as_str()))
+    }
+
+    /// All relations in id order.
+    pub fn relations(&self) -> impl Iterator<Item = &Relation> {
+        self.relations.values()
+    }
+
+    /// All relations of one type, in id order.
+    pub fn relations_of_type<'a>(
+        &'a self,
+        rtype: &'a RelationType,
+    ) -> impl Iterator<Item = &'a Relation> {
+        self.relations.values().filter(move |r| &r.rtype == rtype)
+    }
+
+    /// Remove one relation and return it. Its id is not reused.
+    pub fn remove_relation(&mut self, id: RelationId) -> Result<Relation, GraphError> {
+        let rel = self
+            .relations
+            .remove(&id)
+            .ok_or(GraphError::NoSuchRelation(id))?;
+        if let Some(s) = self.out.get_mut(&rel.from) {
+            s.remove(&id);
+        }
+        if let Some(s) = self.inc.get_mut(&rel.to) {
+            s.remove(&id);
+        }
+        Ok(rel)
+    }
+
+    /// Remove an entity and every relation touching it; return the removed relations in id order.
+    /// The entity's id is not reused.
+    pub fn remove_entity(&mut self, id: EntityId) -> Result<Vec<Relation>, GraphError> {
+        if !self.entities.contains_key(&id) {
+            return Err(GraphError::NoSuchEntity(id));
+        }
+        let mut touching: BTreeSet<RelationId> = BTreeSet::new();
+        touching.extend(self.out.get(&id).into_iter().flatten());
+        touching.extend(self.inc.get(&id).into_iter().flatten());
+        let mut removed = Vec::new();
+        for rid in touching {
+            removed.push(self.remove_relation(rid)?);
+        }
+        self.entities.remove(&id);
+        self.out.remove(&id);
+        self.inc.remove(&id);
+        Ok(removed)
+    }
+
+    /// Serialise to the version-1 text form (see the crate docs).
+    pub fn to_text(&self) -> String {
+        let mut s = String::from("ontologicant-graph 1\n");
+        s.push_str(&format!(
+            "N\t{}\t{}\n",
+            self.next_entity, self.next_relation
+        ));
+        for (id, label) in &self.entities {
+            s.push_str(&format!("E\t{}\t{}\n", id.0, esc(label)));
+        }
+        for r in self.relations.values() {
+            let o = match r.provenance.origin {
+                Origin::Asserted => "A",
+                Origin::Derived => "D",
+            };
+            s.push_str(&format!(
+                "R\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                r.id.0,
+                r.from.0,
+                r.to.0,
+                o,
+                esc(r.rtype.as_str()),
+                esc(&r.provenance.source)
+            ));
+        }
+        s
+    }
+
+    /// Parse the version-1 text form.
+    pub fn from_text(text: &str) -> Result<Graph, GraphError> {
+        let err = |line: usize, m: &str| GraphError::Parse {
+            line,
+            message: m.to_owned(),
+        };
+        let mut lines = text.lines().enumerate().map(|(i, l)| (i + 1, l));
+        match lines.next() {
+            Some((_, "ontologicant-graph 1")) => {}
+            _ => return Err(err(1, "missing header `ontologicant-graph 1`")),
+        }
+        let mut g = Graph::new();
+        let mut have_n = false;
+        for (n, line) in lines {
+            let f: Vec<&str> = line.split('\t').collect();
+            let num = |s: &str| s.parse::<u64>().map_err(|_| err(n, "not a number"));
+            match (f[0], f.len()) {
+                ("N", 3) => {
+                    g.next_entity = num(f[1])?;
+                    g.next_relation = num(f[2])?;
+                    have_n = true;
+                }
+                ("E", 3) => {
+                    let id = EntityId(num(f[1])?);
+                    if g.entities
+                        .insert(id, unesc(f[2]).ok_or_else(|| err(n, "bad escape"))?)
+                        .is_some()
+                    {
+                        return Err(err(n, "duplicate entity id"));
+                    }
+                }
+                ("R", 7) => {
+                    let (id, from, to) = (
+                        RelationId(num(f[1])?),
+                        EntityId(num(f[2])?),
+                        EntityId(num(f[3])?),
+                    );
+                    let origin = match f[4] {
+                        "A" => Origin::Asserted,
+                        "D" => Origin::Derived,
+                        _ => return Err(err(n, "origin must be A or D")),
+                    };
+                    for e in [from, to] {
+                        if !g.entities.contains_key(&e) {
+                            return Err(err(
+                                n,
+                                "relation names an entity that is not declared before it",
+                            ));
+                        }
+                    }
+                    let rtype = RelationType::new(unesc(f[5]).ok_or_else(|| err(n, "bad escape"))?);
+                    let source = unesc(f[6]).ok_or_else(|| err(n, "bad escape"))?;
+                    let provenance = Provenance { source, origin };
+                    let rel = Relation {
+                        id,
+                        from,
+                        rtype,
+                        to,
+                        provenance,
+                    };
+                    if g.relations.insert(id, rel).is_some() {
+                        return Err(err(n, "duplicate relation id"));
+                    }
+                    g.out.entry(from).or_default().insert(id);
+                    g.inc.entry(to).or_default().insert(id);
+                }
+                _ => return Err(err(n, "unknown or malformed record")),
+            }
+        }
+        if !have_n {
+            return Err(err(2, "missing `N` record"));
+        }
+        // Ids must stay below the counters, or a later add could reuse one.
+        if g.entities.keys().any(|e| e.0 >= g.next_entity)
+            || g.relations.keys().any(|r| r.0 >= g.next_relation)
+        {
+            return Err(err(2, "an id is not below its `N` counter"));
+        }
+        Ok(g)
+    }
+}
+
+impl GraphStore for Graph {
+    fn add_entity(&mut self, label: &str) -> EntityId {
+        let id = EntityId(self.next_entity);
+        self.next_entity += 1;
+        self.entities.insert(id, label.to_owned());
+        id
+    }
+
+    fn add_relation(
+        &mut self,
+        from: EntityId,
+        rtype: RelationType,
+        to: EntityId,
+        provenance: Provenance,
+    ) -> Result<RelationId, GraphError> {
+        for e in [from, to] {
+            if !self.entities.contains_key(&e) {
+                return Err(GraphError::NoSuchEntity(e));
+            }
+        }
+        let id = RelationId(self.next_relation);
+        self.next_relation += 1;
+        self.relations.insert(
+            id,
+            Relation {
+                id,
+                from,
+                rtype,
+                to,
+                provenance,
+            },
+        );
+        self.out.entry(from).or_default().insert(id);
+        self.inc.entry(to).or_default().insert(id);
+        Ok(id)
+    }
+
+    fn neighbours(
+        &self,
+        id: EntityId,
+        dir: Direction,
+    ) -> Result<Vec<(RelationId, EntityId)>, GraphError> {
+        if !self.entities.contains_key(&id) {
+            return Err(GraphError::NoSuchEntity(id));
+        }
+        let mut v: Vec<(RelationId, EntityId)> = Vec::new();
+        if matches!(dir, Direction::Out | Direction::Both) {
+            v.extend(
+                self.out
+                    .get(&id)
+                    .into_iter()
+                    .flatten()
+                    .map(|r| (*r, self.relations[r].to)),
+            );
+        }
+        if matches!(dir, Direction::In | Direction::Both) {
+            v.extend(
+                self.inc
+                    .get(&id)
+                    .into_iter()
+                    .flatten()
+                    .map(|r| (*r, self.relations[r].from)),
+            );
+        }
+        v.sort();
+        Ok(v)
+    }
+
+    fn entity_count(&self) -> usize {
+        self.entities.len()
+    }
+
+    fn relation_count(&self) -> usize {
+        self.relations.len()
+    }
+}
+
+fn esc(s: &str) -> String {
+    let mut o = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\\' => o.push_str("\\\\"),
+            '\t' => o.push_str("\\t"),
+            '\n' => o.push_str("\\n"),
+            '\r' => o.push_str("\\r"),
+            c => o.push(c),
+        }
+    }
+    o
+}
+
+fn unesc(s: &str) -> Option<String> {
+    let mut o = String::with_capacity(s.len());
+    let mut it = s.chars();
+    while let Some(c) = it.next() {
+        if c == '\\' {
+            o.push(match it.next()? {
+                '\\' => '\\',
+                't' => '\t',
+                'n' => '\n',
+                'r' => '\r',
+                _ => return None,
+            });
+        } else {
+            o.push(c);
+        }
+    }
+    Some(o)
+}

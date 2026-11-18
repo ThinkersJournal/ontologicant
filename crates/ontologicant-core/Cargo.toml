@@ -1,0 +1,12 @@
+[package]
+name = "ontologicant-core"
+description = "OntologicAnt core: stable identifiers, relation types and provenance shared by the ontology tool crates"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true

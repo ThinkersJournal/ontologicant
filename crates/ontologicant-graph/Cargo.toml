@@ -1,0 +1,15 @@
+[package]
+name = "ontologicant-graph"
+description = "OntologicAnt relation graph: a labelled directed multigraph with stable ids and a documented text serialisation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+ontologicant-core = { version = "=0.0.1", path = "../ontologicant-core" }
+
+[lints]
+workspace = true
