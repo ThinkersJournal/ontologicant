@@ -1,13 +1,16 @@
-# HANDOFF: ontologicant (soft-slept lane created 2026-11-18)
+# HANDOFF: ontologicant (updated 2026-11-18)
 
-You own `C:\Projects\ontologicant` (github.com/ThinkersJournal/ontologicant, public). Read `C:\Projects\CLAUDE.md`, then `docs/IDEAS-AND-DECISIONS-2026-11-18.md` and
-`docs/SPEC-SEED-2026-11-18.md`. Sonnet only; never Opus. The primary checkout stays on `main`; branches live in worktrees
-(`C:\Projects\ontologicant-wt-<topic>`).
+You own `C:\Projects\ontologicant` (github.com/ThinkersJournal/ontologicant, public). Read `C:\Projects\CLAUDE.md`, `docs/IDEAS-AND-DECISIONS-2026-11-18.md`,
+`docs/SPEC-SEED-2026-11-18.md`, `docs/SPEC-STEP1.md`. Sonnet only; never Opus. Primary checkout stays on `main`; branches in worktrees (`C:\Projects\ontologicant-wt-<topic>`).
 
-## First task (from the PM)
-Expand the seed into `docs/SPEC-STEP1.md` after the survey described in section 6 of the seed: ONE PR, docs only, version allocated by the PM at [READY].
-Standing rules from CireSnave: tools are generic over any use of the tool type, never specific to one consumer; and a tool in this field that another project needs is built here and used as a dependency; say in the spec what the first
-consumer needs and when. CireSnave ALSO approved building the foundation tools listed in section 7 of the seed: after the survey and the spec PR you build them (one PR per day, no waiting for him to read the spec first); anything beyond those four waits for the spec to be read. Placeholder crate `ontologicant` 0.0.0 is already on crates.io.
+## State
+- Survey done (crates.io metadata only; no source or papers read, stated in the spec). `docs/SPEC-STEP1.md` is in the spec-step1 PR; version allocated by the PM at [READY].
+- CireSnave approved building the four foundation tools (seed section 7): after the spec PR, build core+graph, kinds, identity, constraints, one PR per day, red-first with sabotage.
+- Open [ASK]s are in SPEC-STEP1 section 7 (shared substrate A/B, mereology default, first-consumer date, own store vs petgraph). Do not block on them except `-core` ids/trace.
+
+## Next
+1. Send [READY] for the spec PR; after merge remove worktree `ontologicant-wt-spec` and delete branch.
+2. Start `ontologicant-graph` (3.1) in a new worktree.
 
 ## Holds / WAITs
 None.
