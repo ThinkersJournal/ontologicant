@@ -5,10 +5,11 @@
 //!   even after the thing it named is removed.
 //! * [`RelationType`]: the name of a kind of relation. A plain string, never an English enum:
 //!   relation vocabularies are data.
-//! * [`Provenance`]: where an assertion came from, and whether it was asserted or derived.
+//! * [`AssertionSource`]: where an assertion came from, and whether it was asserted or derived.
 //! * [`Reason`] and [`Verdict`]: re-exported from `semanticant-core`, where every project in the family finds them
 //!   (PM ruling, 2026-11-18). Note that `semanticant_core::Provenance` is a different thing: the licence and credit of
-//!   a data pack. [`Provenance`] here records where one assertion came from.
+//!   a data pack. [`AssertionSource`] here records where one assertion came from. The two are deliberately never
+//!   re-exported under one name.
 #![forbid(unsafe_code)]
 
 use std::fmt;
@@ -88,24 +89,24 @@ pub enum Origin {
 
 /// Where an assertion came from.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Provenance {
+pub struct AssertionSource {
     /// A free-form source name (a document, a data pack, a tool).
     pub source: String,
     /// Asserted or derived.
     pub origin: Origin,
 }
 
-impl Provenance {
+impl AssertionSource {
     /// An assertion stated by `source`.
     pub fn asserted(source: impl Into<String>) -> Self {
-        Provenance {
+        AssertionSource {
             source: source.into(),
             origin: Origin::Asserted,
         }
     }
     /// A conclusion computed by `source`.
     pub fn derived(source: impl Into<String>) -> Self {
-        Provenance {
+        AssertionSource {
             source: source.into(),
             origin: Origin::Derived,
         }

@@ -2,14 +2,14 @@
 #![allow(missing_docs)]
 use std::collections::BTreeSet;
 
-use ontologicant_graph::{EntityId, Graph, GraphStore, Provenance, RelationType};
+use ontologicant_graph::{AssertionSource, EntityId, Graph, GraphStore, RelationType};
 use ontologicant_kinds::*;
 
 fn t(s: &str) -> RelationType {
     RelationType::new(s)
 }
-fn p() -> Provenance {
-    Provenance::asserted("test")
+fn p() -> AssertionSource {
+    AssertionSource::asserted("test")
 }
 fn ents(g: &mut Graph, n: usize) -> Vec<EntityId> {
     (0..n).map(|i| g.add_entity(&format!("n{i}"))).collect()
