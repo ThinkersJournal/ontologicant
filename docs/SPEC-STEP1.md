@@ -57,7 +57,7 @@ indices are not stable across removal in `Graph` (`StableGraph` exists) **[unver
 ```rust
 let mut g = Graph::new();
 let a = g.add_entity("tabby");               // -> EntityId
-let r = g.add_relation(a, RelationType::new("is-a"), b, Provenance::asserted("source-1"));
+let r = g.add_relation(a, RelationType::new("is-a"), b, AssertionSource::asserted("source-1"));
 for e in g.neighbours(a, Direction::Out) { /* (RelationId, EntityId) in id order */ }
 ```
 

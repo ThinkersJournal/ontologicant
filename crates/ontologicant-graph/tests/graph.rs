@@ -2,8 +2,8 @@
 #![allow(missing_docs)]
 use ontologicant_graph::*;
 
-fn p() -> Provenance {
-    Provenance::asserted("test")
+fn p() -> AssertionSource {
+    AssertionSource::asserted("test")
 }
 fn t(s: &str) -> RelationType {
     RelationType::new(s)
@@ -103,7 +103,7 @@ fn text_round_trip_is_exact_with_awkward_strings() {
     let mut g = Graph::new();
     let a = g.add_entity("tab\there\nnewline\\slash\r é 猫");
     let b = g.add_entity("");
-    g.add_relation(a, t("is\ta"), b, Provenance::derived("src\\1\n"))
+    g.add_relation(a, t("is\ta"), b, AssertionSource::derived("src\\1\n"))
         .unwrap();
     let gone = g.add_entity("gone");
     g.remove_entity(gone).unwrap();

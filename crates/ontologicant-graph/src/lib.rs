@@ -18,7 +18,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-pub use ontologicant_core::{EntityId, Origin, Provenance, RelationId, RelationType};
+pub use ontologicant_core::{AssertionSource, EntityId, Origin, RelationId, RelationType};
 
 /// Which relations of an entity to follow.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -43,7 +43,7 @@ pub struct Relation {
     /// Target entity.
     pub to: EntityId,
     /// Where it came from.
-    pub provenance: Provenance,
+    pub assertion: AssertionSource,
 }
 
 /// Errors from graph operations and parsing.
@@ -83,7 +83,7 @@ pub trait GraphStore {
         from: EntityId,
         rtype: RelationType,
         to: EntityId,
-        provenance: Provenance,
+        assertion: AssertionSource,
     ) -> Result<RelationId, GraphError>;
     /// Relations of `id` in the given direction as (relation, other end), in relation-id order.
     /// A self-loop followed in `Both` appears once per direction it matches.
@@ -193,7 +193,7 @@ impl Graph {
             s.push_str(&format!("E\t{}\t{}\n", id.0, esc(label)));
         }
         for r in self.relations.values() {
-            let o = match r.provenance.origin {
+            let o = match r.assertion.origin {
                 Origin::Asserted => "A",
                 Origin::Derived => "D",
             };
@@ -204,7 +204,7 @@ impl Graph {
                 r.to.0,
                 o,
                 esc(r.rtype.as_str()),
-                esc(&r.provenance.source)
+                esc(&r.assertion.source)
             ));
         }
         s
@@ -262,13 +262,13 @@ impl Graph {
                     }
                     let rtype = RelationType::new(unesc(f[5]).ok_or_else(|| err(n, "bad escape"))?);
                     let source = unesc(f[6]).ok_or_else(|| err(n, "bad escape"))?;
-                    let provenance = Provenance { source, origin };
+                    let assertion = AssertionSource { source, origin };
                     let rel = Relation {
                         id,
                         from,
                         rtype,
                         to,
-                        provenance,
+                        assertion,
                     };
                     if g.relations.insert(id, rel).is_some() {
                         return Err(err(n, "duplicate relation id"));
@@ -305,7 +305,7 @@ impl GraphStore for Graph {
         from: EntityId,
         rtype: RelationType,
         to: EntityId,
-        provenance: Provenance,
+        assertion: AssertionSource,
     ) -> Result<RelationId, GraphError> {
         for e in [from, to] {
             if !self.entities.contains_key(&e) {
@@ -321,7 +321,7 @@ impl GraphStore for Graph {
                 from,
                 rtype,
                 to,
-                provenance,
+                assertion,
             },
         );
         self.out.entry(from).or_default().insert(id);

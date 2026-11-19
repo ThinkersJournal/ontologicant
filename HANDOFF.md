@@ -4,14 +4,14 @@ You own `C:\Projects\ontologicant` (github.com/ThinkersJournal/ontologicant, pub
 Sonnet only; never Opus. Primary checkout stays on `main`; branches in worktrees (`C:\Projects\ontologicant-wt-<topic>`).
 
 ## State
-- Spec merged (#1). PM rulings 2026-11-18: shared types come from `semanticant-core` (Reason, Verdict, Provenance, pack format) as a crates.io dependency once the PM publishes it
-  (semanticant Day 1, 11-19); until then `ontologicant-core` holds a shim Reason/Verdict. Swap before `-core` grows. Mereology default profile: none. Own graph store; petgraph adapter later. Alignment is Step 2.
-- Day 1 PR (branch `day1-core-graph`, worktree `ontologicant-wt-graph`): `ontologicant-core` + `ontologicant-graph` 0.0.1, 13 tests, 4 sabotages caught, CI copied from analysant, SPDX floor 4.
-  Version allocated by the PM at [READY].
+- Merged: spec (#1), Day 1 core + graph (#2, 0.0.1). Branch protection is set by the PM (build/test ubuntu+windows, licence gate, cargo deny).
+- Day 2 PR (branch `day2-kinds`, worktree `ontologicant-wt-kinds`): `ontologicant-kinds` 0.0.2 (Order, Taxonomy, Mereology with user-selected axioms, Vocabulary/Closure) and the shim swap:
+  `Reason`/`Verdict<T>` now re-exported from `semanticant-core` 0.1.0 (crates.io). MSRV raised to 1.88 (semanticant-core's). Our `Provenance` was renamed `AssertionSource` (Relation field `assertion`) in this PR: it is assertion origin, semanticant's is a data-licence record; never re-export both under one name (PM ruling).
+- Rulings: mereology default none; own graph store, petgraph adapter later; alignment is Step 2.
 
-## Next (one PR per day)
-1. After Day 1 merges: remove worktree + branch. Day 2: `ontologicant-kinds` (taxonomy closure/cycles, part-of profiles, relation properties).
-2. Then `-identity`, then `-constraints`. Swap the shim for `semanticant-core` when published.
+## Next (ONE PR per UTC day, counted by day OPENED; PM 2026-11-18: do not open a PR before its day)
+0. #3 marked ready 11-19 UTC; [READY] sent. After it merges: remove worktree + branch. Day 3 (identity) PR opens 11-20 or later (one PR per UTC day, counted by day opened).
+1. After Day 2 merges: remove worktree + branch. Day 3: `ontologicant-identity` (aliases, equivalence classes, merge/split/undo with provenance).
+2. Then `-constraints` (disjointness, cardinality, domain/range, functional/inverse-functional declared in kinds).
 
 ## Holds / WAITs
-None.
