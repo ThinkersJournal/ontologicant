@@ -5,6 +5,9 @@
 - Added `ontologicant-identity`: `IdentityIndex` (aliases, canonical ids, equivalence classes, merge / split / undo over an append-only
   operation log), the `Matcher` trait with `ExactMatcher` and `NormalisedMatcher`, `MergeProposal` (proposing changes nothing; `apply` is a
   separate logged step), and a line-oriented text form that replays the log.
+- Added `ontologicant-constraints`: `ConstraintSet` (disjoint, cardinality, domain, range, functional, inverse-functional, irreflexive) as
+  data with a text form, `from_vocabulary`, and `check` returning a `Report` whose every `Violation` has entities and reasons.
+  `ontologicant-kinds`: `Vocabulary::decls()` (additive).
 
 ## 0.0.2 (not published)
 
