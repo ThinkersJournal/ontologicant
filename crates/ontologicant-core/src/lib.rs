@@ -21,6 +21,7 @@ macro_rules! id_type {
     ($(#[$m:meta])* $name:ident, $prefix:literal) => {
         $(#[$m])*
         #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
         pub struct $name(pub u64);
 
         impl fmt::Display for $name {
@@ -65,6 +66,7 @@ impl std::error::Error for ParseIdError {}
 
 /// The name of a kind of relation, for example `"is-a"` or `"part-of"`. Any string is allowed.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 pub struct RelationType(String);
 
 impl RelationType {
@@ -80,6 +82,7 @@ impl RelationType {
 
 /// Whether an assertion was given or computed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 pub enum Origin {
     /// Stated by a source.
     Asserted,
@@ -89,6 +92,7 @@ pub enum Origin {
 
 /// Where an assertion came from.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 pub struct AssertionSource {
     /// A free-form source name (a document, a data pack, a tool).
     pub source: String,

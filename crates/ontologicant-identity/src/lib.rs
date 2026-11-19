@@ -20,6 +20,7 @@ pub use ontologicant_core::{AssertionSource, EntityId, Origin, Reason};
 
 /// Identifier of an [`Op`] in the log. Never reused.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpId(pub u64);
 
 impl fmt::Display for OpId {
@@ -30,6 +31,7 @@ impl fmt::Display for OpId {
 
 /// What an [`Op`] did.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 pub enum OpKind {
     /// Put the classes of `a` and `b` together.
     Merge {
@@ -52,6 +54,7 @@ pub enum OpKind {
 
 /// One entry of the append-only log.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 pub struct Op {
     /// Its id (ids count up from 1 in log order).
     pub id: OpId,
@@ -65,6 +68,7 @@ pub struct Op {
 
 /// An alias of an entity: a name and where it came from.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 pub struct Alias {
     /// The name, exactly as given.
     pub text: String,
@@ -92,6 +96,8 @@ pub enum IdentityError {
         /// What was wrong.
         problem: String,
     },
+    /// The JSON form is malformed or fails replay.
+    Json(String),
 }
 
 impl fmt::Display for IdentityError {
@@ -107,6 +113,7 @@ impl fmt::Display for IdentityError {
                 write!(f, "operation {o} is an undo and cannot be undone")
             }
             IdentityError::Parse { line, problem } => write!(f, "line {line}: {problem}"),
+            IdentityError::Json(m) => write!(f, "json: {m}"),
         }
     }
 }
@@ -523,6 +530,70 @@ impl IdentityIndex {
                 }
                 _ => return Err(perr("unknown line kind")),
             }
+        }
+        Ok(idx)
+    }
+}
+
+#[cfg(feature = "json")]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct JsonAlias {
+    entity: EntityId,
+    alias: Alias,
+}
+
+#[cfg(feature = "json")]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct JsonIndex {
+    version: u32,
+    aliases: Vec<JsonAlias>,
+    log: Vec<Op>,
+}
+
+#[cfg(feature = "json")]
+impl IdentityIndex {
+    /// Serialise to JSON: `{"version":1,"aliases":[{"entity":1,"alias":{"text","source"}}],"log":[{"id","kind","why","source"}]}`.
+    /// `kind` is `{"Merge":{"a","b"}}`, `{"Split":{"entity"}}` or `{"Undo":{"target"}}`.
+    pub fn to_json(&self) -> String {
+        let doc = JsonIndex {
+            version: 1,
+            aliases: self
+                .aliases
+                .iter()
+                .flat_map(|(e, list)| {
+                    list.iter().map(|a| JsonAlias {
+                        entity: *e,
+                        alias: a.clone(),
+                    })
+                })
+                .collect(),
+            log: self.log.clone(),
+        };
+        serde_json::to_string(&doc).expect("an index always serialises")
+    }
+
+    /// Read the JSON form, replaying the log through [`IdentityIndex::merge`], [`IdentityIndex::split`] and
+    /// [`IdentityIndex::undo`] so it is validated exactly like a live session.
+    pub fn from_json(json: &str) -> Result<IdentityIndex, IdentityError> {
+        let doc: JsonIndex =
+            serde_json::from_str(json).map_err(|e| IdentityError::Json(e.to_string()))?;
+        if doc.version != 1 {
+            return Err(IdentityError::Json("unsupported version".into()));
+        }
+        let mut idx = IdentityIndex::new();
+        for a in doc.aliases {
+            idx.add_alias(a.entity, a.alias.text, a.alias.source);
+        }
+        for op in doc.log {
+            if op.id.0 != idx.log.len() as u64 + 1 {
+                return Err(IdentityError::Json("op ids must count up from 1".into()));
+            }
+            match op.kind {
+                OpKind::Merge { a, b } => idx.merge(a, b, &op.why, op.source),
+                OpKind::Split { entity } => idx.split(entity, &op.why, op.source),
+                OpKind::Undo { target } => idx.undo(target, &op.why, op.source),
+            }
+            .map_err(|e| IdentityError::Json(e.to_string()))?;
         }
         Ok(idx)
     }

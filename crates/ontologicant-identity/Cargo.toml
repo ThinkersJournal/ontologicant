@@ -10,6 +10,12 @@ authors.workspace = true
 
 [dependencies]
 ontologicant-core = { version = "=0.0.3", path = "../ontologicant-core" }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+[features]
+# `to_json` / `from_json`
+json = ["dep:serde", "dep:serde_json", "ontologicant-core/json"]
 
 [lints]
 workspace = true

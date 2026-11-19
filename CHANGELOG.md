@@ -8,6 +8,9 @@
 - Added `ontologicant-constraints`: `ConstraintSet` (disjoint, cardinality, domain, range, functional, inverse-functional, irreflexive) as
   data with a text form, `from_vocabulary`, and `check` returning a `Report` whose every `Violation` has entities and reasons.
   `ontologicant-kinds`: `Vocabulary::decls()` (additive).
+- Feature `json` (off by default) on core, graph, identity and constraints: serde derives on the shared types and `to_json` / `from_json` on
+  `Graph`, `IdentityIndex` and `ConstraintSet`, validated like the text forms (`from_json` replays the identity log). `GraphError::Json` and
+  `IdentityError::Json` added. CI now also runs clippy and the tests with `--all-features`.
 
 ## 0.0.2 (not published)
 

@@ -20,6 +20,8 @@ pub use ontologicant_core::Reason;
 
 /// One declared requirement.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "json", serde(rename_all = "kebab-case"))]
 pub enum Constraint {
     /// No entity is of both kinds `a` and `b`.
     Disjoint {
@@ -335,6 +337,41 @@ impl ConstraintSet {
             out.add(c);
         }
         Ok(out)
+    }
+}
+
+#[cfg(feature = "json")]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct JsonSet {
+    version: u32,
+    constraints: Vec<Constraint>,
+}
+
+#[cfg(feature = "json")]
+impl ConstraintSet {
+    /// Serialise to JSON: `{"version":1,"constraints":[...]}`, each constraint externally tagged by its kebab-case kind
+    /// (`{"disjoint":{"a":1,"b":2}}`, `{"functional":"rel"}`, `{"cardinality":{"rtype","min","max","of"}}`).
+    pub fn to_json(&self) -> String {
+        let doc = JsonSet {
+            version: 1,
+            constraints: self.constraints.clone(),
+        };
+        serde_json::to_string(&doc).expect("constraints always serialise")
+    }
+
+    /// Read the JSON form written by [`ConstraintSet::to_json`].
+    pub fn from_json(json: &str) -> Result<ConstraintSet, ParseError> {
+        let bad = |m: String| ParseError {
+            line: 0,
+            problem: m,
+        };
+        let doc: JsonSet = serde_json::from_str(json).map_err(|e| bad(e.to_string()))?;
+        if doc.version != 1 {
+            return Err(bad("unsupported version".into()));
+        }
+        Ok(ConstraintSet {
+            constraints: doc.constraints,
+        })
     }
 }
 
