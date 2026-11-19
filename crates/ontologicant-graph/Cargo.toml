@@ -12,9 +12,12 @@ authors.workspace = true
 ontologicant-core = { version = "=0.0.3", path = "../ontologicant-core" }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
+petgraph = { version = "0.8.3", optional = true }
 
 [features]
 # `Graph::to_json` / `Graph::from_json`
+# `Graph::to_petgraph` / `Graph::from_petgraph` interop with petgraph
+petgraph = ["dep:petgraph"]
 json = ["dep:serde", "dep:serde_json", "ontologicant-core/json"]
 
 [lints]

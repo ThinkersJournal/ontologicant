@@ -11,6 +11,8 @@
 - Feature `json` (off by default) on core, graph, identity and constraints: serde derives on the shared types and `to_json` / `from_json` on
   `Graph`, `IdentityIndex` and `ConstraintSet`, validated like the text forms (`from_json` replays the identity log). `GraphError::Json` and
   `IdentityError::Json` added. CI now also runs clippy and the tests with `--all-features`.
+- Feature `petgraph` on `ontologicant-graph` (off by default): `Graph::to_petgraph` (a `StableGraph` whose weights keep our ids, labels and relations;
+  parallel relations stay separate edges) and `Graph::from_petgraph`. The own store stays the core; this is interop only.
 
 ## 0.0.2 (not published)
 
