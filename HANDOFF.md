@@ -5,7 +5,7 @@ Sonnet only; never Opus. Primary checkout stays on `main`; branches in worktrees
 
 ## State
 - Merged: spec (#1), Day 1 core + graph (#2, 0.0.1). Branch protection is set by the PM (build/test ubuntu+windows, licence gate, cargo deny).
-- Day 2 PR (branch `day2-kinds`, worktree `ontologicant-wt-kinds`): `ontologicant-kinds` 0.0.1 (Order, Taxonomy, Mereology with user-selected axioms, Vocabulary/Closure) and the shim swap:
+- Day 2 PR (branch `day2-kinds`, worktree `ontologicant-wt-kinds`): `ontologicant-kinds` 0.0.2 (Order, Taxonomy, Mereology with user-selected axioms, Vocabulary/Closure) and the shim swap:
   `Reason`/`Verdict<T>` now re-exported from `semanticant-core` 0.1.0 (crates.io). MSRV raised to 1.88 (semanticant-core's). Our `Provenance` was renamed `AssertionSource` (Relation field `assertion`) in this PR: it is assertion origin, semanticant's is a data-licence record; never re-export both under one name (PM ruling).
 - Rulings: mereology default none; own graph store, petgraph adapter later; alignment is Step 2.
 
