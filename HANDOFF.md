@@ -10,9 +10,8 @@ Sonnet only; never Opus. Primary checkout stays on `main`; branches in worktrees
 - Rulings: mereology default none; own graph store, petgraph adapter later; alignment is Step 2.
 
 ## Next (ONE PR per UTC day, counted by day OPENED; PM 2026-11-18: do not open a PR before its day)
-0. #3 is a DRAFT opened 11-18 as a one-off the PM accepted: on 11-19 UTC read its CI, mark it ready, send [READY]. Day 3 work (identity) goes on a branch off day2-kinds; open its PR on 11-20 or later, after #3 merges.
+0. #3 marked ready 11-19 UTC; [READY] sent. After it merges: remove worktree + branch. Day 3 (identity) PR opens 11-20 or later (one PR per UTC day, counted by day opened).
 1. After Day 2 merges: remove worktree + branch. Day 3: `ontologicant-identity` (aliases, equivalence classes, merge/split/undo with provenance).
 2. Then `-constraints` (disjointness, cardinality, domain/range, functional/inverse-functional declared in kinds).
 
 ## Holds / WAITs
-WAIT: mark draft PR #3 ready on the next UTC day (one PR per day) | check: gh pr view 3 --json isDraft,state,statusCheckRollup | wake: 2026-11-19T00:05:00Z
