@@ -149,6 +149,101 @@ pub fn propose(
     Ok(out)
 }
 
+/// Propose correspondences from **shared anchored neighbours**, given correspondences already accepted in `anchors`.
+///
+/// **What it matches:** a left entity `l` and a right entity `r` (not already equivalent through `anchors`) are proposed
+/// when at least one neighbour of `l` is equivalent, through live correspondences in `anchors`, to a neighbour of `r`.
+/// A neighbour is any entity joined by a relation in either direction. The score is
+/// `shared / (|N(l)| + |N(r)| - shared)`, where `shared` is the number of neighbours of `l` that are anchored to some
+/// neighbour of `r`.
+///
+/// **What it does NOT match or claim:** it looks at nothing but graph shape plus your anchors. With no anchors it
+/// proposes nothing. It ignores names, relation types, relation direction and the taxonomy, so two entities that are
+/// both linked to the same anchored hub (say, two unrelated things that are each "part of" the same car) are proposed
+/// as equally as two genuine duplicates. A proposal is a lead with a count behind it, not evidence of sameness; accept
+/// only after review or after combining it with a name match. Ordered by descending score, then by ids.
+pub fn propose_structural(
+    left: Side<'_>,
+    right: Side<'_>,
+    anchors: &Alignment,
+) -> Result<Vec<Correspondence>, AlignError> {
+    if left.name == right.name {
+        return Err(AlignError::SameGraph(left.name.clone()));
+    }
+    fn adjacency(g: &Graph) -> BTreeMap<EntityId, BTreeSet<EntityId>> {
+        let mut m: BTreeMap<EntityId, BTreeSet<EntityId>> = BTreeMap::new();
+        for r in g.relations() {
+            if r.from != r.to {
+                m.entry(r.from).or_default().insert(r.to);
+                m.entry(r.to).or_default().insert(r.from);
+            }
+        }
+        m
+    }
+    let (la, ra) = (adjacency(left.graph), adjacency(right.graph));
+    // For each left entity, the right-graph entities it is equivalent to through live anchors, computed once.
+    let mut anchored: BTreeMap<EntityId, BTreeSet<EntityId>> = BTreeMap::new();
+    for (e, _) in left.graph.entities() {
+        let lref = Ref {
+            graph: left.name.clone(),
+            entity: e,
+        };
+        let eq: BTreeSet<EntityId> = anchors
+            .equivalents(&lref)
+            .into_iter()
+            .filter(|x| x.graph == *right.name)
+            .map(|x| x.entity)
+            .collect();
+        if !eq.is_empty() {
+            anchored.insert(e, eq);
+        }
+    }
+    let mut out = Vec::new();
+    for (&le, ln) in &la {
+        for (&re, rn) in &ra {
+            if anchored.get(&le).is_some_and(|eq| eq.contains(&re)) {
+                continue;
+            }
+            let shared = ln
+                .iter()
+                .filter(|n| {
+                    anchored
+                        .get(n)
+                        .is_some_and(|eq| rn.iter().any(|m| eq.contains(m)))
+                })
+                .count();
+            if shared > 0 {
+                out.push(Correspondence {
+                    left: Ref {
+                        graph: left.name.clone(),
+                        entity: le,
+                    },
+                    right: Ref {
+                        graph: right.name.clone(),
+                        entity: re,
+                    },
+                    relation: Relation::Equivalent,
+                    score: shared as f64 / (ln.len() + rn.len() - shared) as f64,
+                    reasons: vec![Reason::new(
+                        "alignment.structural",
+                        format!(
+                            "{shared} of {} neighbours of {le} are anchored to a neighbour of {re} ({} neighbours)",
+                            ln.len(),
+                            rn.len()
+                        ),
+                    )],
+                });
+            }
+        }
+    }
+    out.sort_by(|a, b| {
+        b.score
+            .total_cmp(&a.score)
+            .then_with(|| (&a.left, &a.right).cmp(&(&b.left, &b.right)))
+    });
+    Ok(out)
+}
+
 /// Identifier of an accepted correspondence in the log. Never reused. Displays as `c<n>`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CorrespondenceId(pub u64);
@@ -434,6 +529,88 @@ impl Alignment {
             }
         }
         Ok(out)
+    }
+}
+
+#[cfg(feature = "json")]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct JsonEntry {
+    left_graph: String,
+    left_entity: u64,
+    right_graph: String,
+    right_entity: u64,
+    score: f64,
+    origin: String,
+    source: String,
+    why: String,
+    retracted: bool,
+}
+
+#[cfg(feature = "json")]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct JsonAlignment {
+    version: u32,
+    entries: Vec<JsonEntry>,
+}
+
+#[cfg(feature = "json")]
+impl Alignment {
+    /// Serialise to JSON: `{"version":1,"entries":[{left_graph,left_entity,right_graph,right_entity,score,origin,source,why,retracted}]}`
+    /// in log order (the entry's id is its position).
+    pub fn to_json(&self) -> String {
+        let doc = JsonAlignment {
+            version: 1,
+            entries: self
+                .log
+                .iter()
+                .map(|e| JsonEntry {
+                    left_graph: e.left.graph.as_str().to_owned(),
+                    left_entity: e.left.entity.0,
+                    right_graph: e.right.graph.as_str().to_owned(),
+                    right_entity: e.right.entity.0,
+                    score: e.score,
+                    origin: if e.source.origin == Origin::Asserted {
+                        "asserted".into()
+                    } else {
+                        "derived".into()
+                    },
+                    source: e.source.source.clone(),
+                    why: e.why.clone(),
+                    retracted: e.retracted,
+                })
+                .collect(),
+        };
+        serde_json::to_string(&doc).expect("alignment always serialises")
+    }
+
+    /// Read the JSON form written by [`Alignment::to_json`]. It is replayed through the text form's validation, so both
+    /// forms accept and refuse exactly the same alignments; a [`AlignError::Parse`] `line` is the 1-based entry number
+    /// (0 for a document-level problem).
+    pub fn from_json(json: &str) -> Result<Alignment, AlignError> {
+        let bad = |m: String| AlignError::Parse {
+            line: 0,
+            problem: m,
+        };
+        let doc: JsonAlignment = serde_json::from_str(json).map_err(|e| bad(e.to_string()))?;
+        if doc.version != 1 {
+            return Err(bad("unsupported version".into()));
+        }
+        let mut text = String::new();
+        for (i, e) in doc.entries.iter().enumerate() {
+            text.push_str(&format!(
+                "accept\t{i}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                esc(&e.left_graph),
+                e.left_entity,
+                esc(&e.right_graph),
+                e.right_entity,
+                e.score,
+                e.origin,
+                esc(&e.source),
+                esc(&e.why),
+                if e.retracted { "retracted" } else { "live" },
+            ));
+        }
+        Alignment::from_text(&text)
     }
 }
 

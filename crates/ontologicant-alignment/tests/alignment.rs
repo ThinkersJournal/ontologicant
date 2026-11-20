@@ -173,3 +173,65 @@ fn malformed_text_is_a_typed_error() {
     }
     assert!(Alignment::from_text("").unwrap().log().is_empty());
 }
+
+fn link(g: &mut Graph, a: EntityId, b: EntityId) {
+    g.add_relation(a, ontologicant_core::RelationType::new("rel"), b, src())
+        .unwrap();
+}
+
+/// left: h1 - x - h2     right: H1 - X - H2 - Y     (h*/H* anchored; x~X shares two, nothing shares with Y but H2)
+#[test]
+fn structural_needs_anchors_and_counts_shared_neighbours() {
+    let (mut a, ae) = graph(&["h1", "x", "h2"]);
+    link(&mut a, ae[1], ae[0]);
+    link(&mut a, ae[1], ae[2]);
+    let (mut b, be) = graph(&["H1", "X", "H2", "Y"]);
+    link(&mut b, be[1], be[0]);
+    link(&mut b, be[1], be[2]);
+    link(&mut b, be[3], be[2]);
+    let (na, nb) = (gn("a"), gn("b"));
+    let (sa, sb) = (side(&na, &a, None), side(&nb, &b, None));
+
+    // No anchors: nothing, whatever the shape.
+    assert!(
+        propose_structural(sa, sb, &Alignment::new())
+            .unwrap()
+            .is_empty()
+    );
+
+    let mut al = Alignment::new();
+    al.accept(&corr(r("a", ae[0]), r("b", be[0])), src())
+        .unwrap();
+    al.accept(&corr(r("a", ae[2]), r("b", be[2])), src())
+        .unwrap();
+    let p = propose_structural(sa, sb, &al).unwrap();
+    let pair = |c: &Correspondence| (c.left.entity, c.right.entity);
+    // x~X: both neighbours anchored: 2 / (2 + 2 - 2) = 1.0. x~Y: one shared: 1 / (2 + 1 - 1) = 0.5.
+    assert_eq!(pair(&p[0]), (ae[1], be[1]));
+    assert_eq!(p[0].score, 1.0);
+    assert!(
+        p.iter()
+            .any(|c| pair(c) == (ae[1], be[3]) && c.score == 0.5)
+    );
+    // Anchored pairs are not re-proposed; a hub's own pairs with its anchors' neighbours still appear (shape only).
+    assert!(p.iter().all(|c| pair(c) != (ae[0], be[0])));
+    assert!(p[0].reasons[0].rule == "alignment.structural");
+}
+
+#[test]
+fn structural_ignores_names_and_refuses_same_graph() {
+    let (mut a, ae) = graph(&["same", "hub"]);
+    link(&mut a, ae[0], ae[1]);
+    let (mut b, be) = graph(&["different", "hub"]);
+    link(&mut b, be[0], be[1]);
+    let (na, nb) = (gn("a"), gn("b"));
+    let mut al = Alignment::new();
+    al.accept(&corr(r("a", ae[1]), r("b", be[1])), src())
+        .unwrap();
+    let p = propose_structural(side(&na, &a, None), side(&nb, &b, None), &al).unwrap();
+    assert_eq!(p.len(), 1, "names differ yet the shape proposes it");
+    assert!(matches!(
+        propose_structural(side(&na, &a, None), side(&na, &a, None), &al),
+        Err(AlignError::SameGraph(_))
+    ));
+}

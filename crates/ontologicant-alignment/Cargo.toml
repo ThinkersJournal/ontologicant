@@ -12,6 +12,12 @@ authors.workspace = true
 ontologicant-core = { version = "=0.0.4", path = "../ontologicant-core" }
 ontologicant-graph = { version = "=0.0.4", path = "../ontologicant-graph" }
 ontologicant-identity = { version = "=0.0.4", path = "../ontologicant-identity" }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+[features]
+# `Alignment::to_json` / `from_json`
+json = ["dep:serde", "dep:serde_json"]
 
 [lints]
 workspace = true

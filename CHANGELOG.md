@@ -10,6 +10,9 @@
   and returns `Correspondence` proposals with reasons; `Alignment` is an append-only, retractable overlay (transitive, symmetric `equivalent`;
   text form that replays) and never mutates either graph. `Relation` is `non_exhaustive`; `GraphName` is a validated string until SageAnt fixes
   cross-graph addressing.
+- `ontologicant-alignment`: `propose_structural` (shared anchored neighbours only; documented as shape-only, no names, types or semantics, and
+  nothing without anchors) and an optional `json` feature (`Alignment::to_json` / `from_json`, validated through the text form; serde and
+  serde_json, both already in the tree, off by default).
 
 ## 0.0.3 (not published)
 

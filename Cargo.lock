@@ -129,6 +129,8 @@ dependencies = [
  "ontologicant-core",
  "ontologicant-graph",
  "ontologicant-identity",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
