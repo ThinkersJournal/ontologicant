@@ -14,6 +14,27 @@
 //! The graph-name scheme is a plain validated string here, because the addressing SageAnt will eventually fix
 //! (graph id, chunk id, version, content hash) does not exist yet. [`Ref`] is the one place to change.
 
+//! # Example
+//! ```
+//! use ontologicant_alignment::{propose, Alignment, GraphName, Ref, Side};
+//! use ontologicant_core::AssertionSource;
+//! use ontologicant_graph::{Graph, GraphStore};
+//! use ontologicant_identity::NormalisedMatcher;
+//!
+//! let (mut a, mut b) = (Graph::new(), Graph::new());
+//! let ea = a.add_entity("Cat");
+//! let eb = b.add_entity("cat");
+//! let (na, nb) = (GraphName::new("a").unwrap(), GraphName::new("b").unwrap());
+//! let side = |name, graph| Side { name, graph, identity: None };
+//! let proposals = propose(side(&na, &a), side(&nb, &b), &NormalisedMatcher).unwrap();
+//! assert_eq!(proposals.len(), 1);
+//!
+//! let mut alignment = Alignment::new();
+//! alignment.accept(&proposals[0], AssertionSource::asserted("reviewer")).unwrap();
+//! let (ra, rb) = (Ref { graph: na, entity: ea }, Ref { graph: nb, entity: eb });
+//! assert!(alignment.equivalent(&ra, &rb)); // a and b themselves were never changed
+//! ```
+
 use ontologicant_core::{AssertionSource, EntityId, Origin, Reason};
 use ontologicant_graph::Graph;
 use ontologicant_identity::{IdentityIndex, Matcher};

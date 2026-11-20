@@ -11,6 +11,24 @@
 //!
 //! `propose_merges` compares every pair of alias-holding entities (quadratic); it is the reference implementation,
 //! not an index.
+//! # Example
+//! ```
+//! use ontologicant_identity::{AssertionSource, EntityId, IdentityIndex, NormalisedMatcher};
+//!
+//! let (a, b) = (EntityId(0), EntityId(1));
+//! let mut ix = IdentityIndex::new();
+//! ix.add_alias(a, "Cat", AssertionSource::asserted("example"));
+//! ix.add_alias(b, "cat", AssertionSource::asserted("example"));
+//! let proposals = ix.propose_merges(&NormalisedMatcher);
+//! assert_eq!(proposals.len(), 1); // proposing changed nothing
+//! assert!(!ix.same(a, b));
+//! let op = ix.apply(&proposals[0], AssertionSource::asserted("reviewer")).unwrap();
+//! assert!(ix.same(a, b));
+//! ix.undo(op, "second thoughts", AssertionSource::asserted("reviewer")).unwrap();
+//! assert!(!ix.same(a, b));
+//! assert_eq!(ix.log().len(), 2); // append-only: merge, then undo
+//! ```
+//!
 #![forbid(unsafe_code)]
 
 use std::collections::{BTreeMap, BTreeSet};

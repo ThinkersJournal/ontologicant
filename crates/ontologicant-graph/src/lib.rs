@@ -18,6 +18,20 @@
 //! E <entity id> <label>
 //! R <relation id> <from> <to> <A|D> <relation type> <source>
 //! ```
+//! # Example
+//! ```
+//! use ontologicant_graph::{AssertionSource, Graph, GraphStore, RelationType};
+//!
+//! let mut g = Graph::new();
+//! let cat = g.add_entity("cat");
+//! let animal = g.add_entity("animal");
+//! g.add_relation(cat, RelationType::new("is-a"), animal, AssertionSource::asserted("example"))
+//!     .unwrap();
+//! let back = Graph::from_text(&g.to_text()).unwrap();
+//! assert_eq!(back.to_text(), g.to_text());
+//! assert_eq!(back.entities().count(), 2);
+//! ```
+//!
 #![forbid(unsafe_code)]
 
 use std::collections::{BTreeMap, BTreeSet};
