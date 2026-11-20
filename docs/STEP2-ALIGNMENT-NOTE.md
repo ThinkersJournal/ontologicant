@@ -2,7 +2,7 @@
 
 Status: draft by the ontologicant lane, 2026-11-19, against branch `day3-identity` (identity, constraints, json and petgraph features built).
 Nothing here is implemented. Items marked **[unverified]** are guesses to confirm; the SageAnt "X4 and X5" text named in
-`SPEC-STEP1.md` section 4 has still not been seen, so cross-graph addressing is the biggest unknown.
+`SPEC-STEP1.md` section 4 does not exist yet (see 3a), so cross-graph addressing stays the biggest unknown.
 
 ## 1. What alignment means here
 
@@ -34,6 +34,17 @@ correspondences, each with a relation and a confidence.)
 2. Where does the graph-name scheme live? Core (all tools share it), or a new `-alignment` crate that owns it?
 3. Does the result of accepting a correspondence feed back into identity (merge across graphs) or stay a separate overlay? Overlay is
    safer: it never mutates either graph, and it can be undone by deleting the overlay.
+
+## 3a. Answer received: SageAnt X4/X5 (2026-11-20)
+
+Source: the pm-ants lane relaying SageAnt, 2026-11-20 (SageAnt ROADMAP rows X4/X5; `docs/PROPOSAL-expansion-2026-11-18.md` item 3).
+
+- **No X4/X5 design text exists.** Both rows are Phase 2, planned and not started; a design note follows only after X1-X3.
+- X4: a link target is another graph plus a chunk, addressed by (graph id, chunk id, version, content hash); an untrusted stub.
+- X5: a chunk version referenced from a shared collection under existing grants.
+- SageAnt specifies **no alignment**. Its reading, stated as not a decision: only "same chunk in two graphs" (equal content hash at a version) means `Equivalent`, at most.
+
+Consequence: question 1 below is answered for now as **`Equivalent` only**, with the graph-name scheme swappable until X4 fixes an address.
 
 ## 4. Not proposed
 
