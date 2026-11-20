@@ -11,6 +11,25 @@
 //!   enforced by the constraints crate.
 //!
 //! Relation names are plain strings: nothing here is tied to English or to a particular relation name.
+//!
+//! # Example
+//! ```
+//! use ontologicant_graph::{AssertionSource, Graph, GraphStore, RelationType};
+//! use ontologicant_kinds::Taxonomy;
+//!
+//! let mut g = Graph::new();
+//! let (tabby, cat, animal) = (g.add_entity("tabby"), g.add_entity("cat"), g.add_entity("animal"));
+//! let isa = RelationType::new("is-a");
+//! let src = AssertionSource::asserted("example");
+//! g.add_relation(tabby, isa.clone(), cat, src.clone()).unwrap();
+//! g.add_relation(cat, isa.clone(), animal, src).unwrap();
+//!
+//! let t = Taxonomy::from_graph(&g, &isa).unwrap();
+//! let verdict = t.is_a(tabby, animal);
+//! assert!(verdict.value); // transitively, and the verdict says why
+//! assert!(!verdict.reasons.is_empty());
+//! assert!(t.ancestors(tabby).contains(&animal));
+//! ```
 #![forbid(unsafe_code)]
 
 mod mereology;
