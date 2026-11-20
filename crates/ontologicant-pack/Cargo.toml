@@ -1,0 +1,22 @@
+[package]
+name = "ontologicant-pack"
+description = "OntologicAnt data-pack loading: constraint sets, graphs and identity logs read from a verified SemanticAnt data pack, each with its pack as the assertion source"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+ontologicant-core = { version = "=0.0.4", path = "../ontologicant-core" }
+ontologicant-graph = { version = "=0.0.4", path = "../ontologicant-graph" }
+ontologicant-identity = { version = "=0.0.4", path = "../ontologicant-identity" }
+ontologicant-constraints = { version = "=0.0.4", path = "../ontologicant-constraints" }
+semanticant-pack = "0.1.2"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+semanticant-core = "0.1.2"

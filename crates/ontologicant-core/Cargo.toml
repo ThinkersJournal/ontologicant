@@ -9,7 +9,7 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
-semanticant-core = "0.1.0"
+semanticant-core = "0.1.2"
 serde = { version = "1", features = ["derive"], optional = true }
 
 [features]

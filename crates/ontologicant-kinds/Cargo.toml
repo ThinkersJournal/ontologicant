@@ -9,8 +9,8 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
-ontologicant-core = { version = "=0.0.3", path = "../ontologicant-core" }
-ontologicant-graph = { version = "=0.0.3", path = "../ontologicant-graph" }
+ontologicant-core = { version = "=0.0.4", path = "../ontologicant-core" }
+ontologicant-graph = { version = "=0.0.4", path = "../ontologicant-graph" }
 
 [lints]
 workspace = true

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.4 (not published)
+
+- Added `ontologicant-pack`: reads a `ConstraintSet`, `Graph` or `IdentityIndex` from a data pack already opened and verified by
+  `semanticant-pack` 0.1.2 (crates.io), checking the manifest `kind` first and returning each value with a `pack:<name>@<version>`
+  `AssertionSource`. Typed `LoadError`; `open_*` helpers open from a directory. Consumes the pack loader, does not copy it.
+- `ontologicant-core` now depends on `semanticant-core` 0.1.2 (was 0.1.0).
+
 ## 0.0.3 (not published)
 
 - Added `ontologicant-identity`: `IdentityIndex` (aliases, canonical ids, equivalence classes, merge / split / undo over an append-only

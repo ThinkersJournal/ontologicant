@@ -9,7 +9,7 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
-ontologicant-core = { version = "=0.0.3", path = "../ontologicant-core" }
+ontologicant-core = { version = "=0.0.4", path = "../ontologicant-core" }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 
