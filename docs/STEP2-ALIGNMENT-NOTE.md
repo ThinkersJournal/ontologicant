@@ -51,7 +51,9 @@ Consequence: question 1 below is answered for now as **`Equivalent` only**, with
 No model or learned component in core, no SPARQL, no OWL reasoner (as in `SPEC-STEP1.md` section 2 non-goals). `oxrdf` and `fastobo`
 are named there as adapter candidates for importing existing ontologies; they are not needed to design alignment itself.
 
-## 5. Recommendation
+## 5. Recommendation (superseded 2026-11-20: built)
+
+`ontologicant-alignment` implements the Equivalent-only first step below (0.0.4). The text that follows is the original recommendation.
 
 Wait for answers to question 1 and for the X4/X5 text before writing code. The smallest useful first step, if a consumer asks, is
 `Equivalent`-only alignment over `(GraphName, EntityId)` pairs reusing `Matcher`, `MergeProposal`-style proposals and the text/json forms.
