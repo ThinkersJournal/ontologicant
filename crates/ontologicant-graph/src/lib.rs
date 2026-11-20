@@ -5,6 +5,11 @@
 //! * Every listing is in id order, so output is deterministic.
 //! * [`GraphStore`] is the trait other stores can implement; [`Graph`] is the in-memory reference store.
 //!
+//! # JSON (feature `json`)
+//! [`Graph::to_json`] / [`Graph::from_json`] carry the same information as the text form, as
+//! `{"version":1,"next_entity":n,"next_relation":n,"entities":[{"id":0,"label":".."}],"relations":[{"id","from","rtype","to","assertion":{"source","origin":"Asserted"|"Derived"}}]}`,
+//! checked by the same invariants (unique ids, declared endpoints, ids below the counters).
+//!
 //! # Text format (version 1)
 //! Line oriented, fields separated by a TAB, `\\`, `\t`, `\n` and `\r` escaped inside a field:
 //! ```text
@@ -33,6 +38,7 @@ pub enum Direction {
 
 /// One relation instance.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 pub struct Relation {
     /// Its id.
     pub id: RelationId,
@@ -60,6 +66,8 @@ pub enum GraphError {
         /// What is wrong.
         message: String,
     },
+    /// The JSON form is malformed or breaks a graph invariant.
+    Json(String),
 }
 
 impl fmt::Display for GraphError {
@@ -68,6 +76,7 @@ impl fmt::Display for GraphError {
             GraphError::NoSuchEntity(id) => write!(f, "no such entity {id}"),
             GraphError::NoSuchRelation(id) => write!(f, "no such relation {id}"),
             GraphError::Parse { line, message } => write!(f, "line {line}: {message}"),
+            GraphError::Json(m) => write!(f, "json: {m}"),
         }
     }
 }
@@ -287,6 +296,134 @@ impl Graph {
             || g.relations.keys().any(|r| r.0 >= g.next_relation)
         {
             return Err(err(2, "an id is not below its `N` counter"));
+        }
+        Ok(g)
+    }
+}
+
+/// A [`Graph`] exported to petgraph (feature `petgraph`): nodes weigh `(EntityId, label)`, edges weigh the [`Relation`].
+/// Our ids stay on the weights, so any petgraph algorithm result maps back by id.
+#[cfg(feature = "petgraph")]
+#[derive(Clone, Debug)]
+pub struct PetGraph {
+    /// The petgraph graph. A `StableGraph`, so its indices survive removal as ours do.
+    pub graph: petgraph::stable_graph::StableDiGraph<(EntityId, String), Relation>,
+    nodes: BTreeMap<EntityId, petgraph::stable_graph::NodeIndex>,
+}
+
+#[cfg(feature = "petgraph")]
+impl PetGraph {
+    /// The node that stands for `id`, if the entity was exported.
+    pub fn node_of(&self, id: EntityId) -> Option<petgraph::stable_graph::NodeIndex> {
+        self.nodes.get(&id).copied()
+    }
+}
+
+#[cfg(feature = "petgraph")]
+impl Graph {
+    /// Export to petgraph. Nodes are added in entity-id order and edges in relation-id order, so the result is
+    /// deterministic; parallel relations stay separate edges.
+    pub fn to_petgraph(&self) -> PetGraph {
+        let mut graph = petgraph::stable_graph::StableDiGraph::new();
+        let nodes: BTreeMap<EntityId, _> = self
+            .entities
+            .iter()
+            .map(|(id, label)| (*id, graph.add_node((*id, label.clone()))))
+            .collect();
+        for r in self.relations.values() {
+            graph.add_edge(nodes[&r.from], nodes[&r.to], r.clone());
+        }
+        PetGraph { graph, nodes }
+    }
+
+    /// Import from petgraph. New entity ids are assigned in node-index order and new relation ids in edge-index order
+    /// (holes left by removed petgraph nodes and edges are skipped); the ids of a previous export are not recovered.
+    pub fn from_petgraph(
+        p: &petgraph::stable_graph::StableDiGraph<String, (RelationType, AssertionSource)>,
+    ) -> Graph {
+        use petgraph::visit::{EdgeRef, IntoEdgeReferences};
+        let mut g = Graph::new();
+        let mut ids = BTreeMap::new();
+        for n in p.node_indices() {
+            ids.insert(n, g.add_entity(&p[n]));
+        }
+        for e in p.edge_references() {
+            let (rtype, assertion) = e.weight().clone();
+            g.add_relation(ids[&e.source()], rtype, ids[&e.target()], assertion)
+                .expect("both ends were just added");
+        }
+        g
+    }
+}
+
+#[cfg(feature = "json")]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct JsonEntity {
+    id: EntityId,
+    label: String,
+}
+
+#[cfg(feature = "json")]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct JsonGraph {
+    version: u32,
+    next_entity: u64,
+    next_relation: u64,
+    entities: Vec<JsonEntity>,
+    relations: Vec<Relation>,
+}
+
+#[cfg(feature = "json")]
+impl Graph {
+    /// Serialise to JSON (see the crate docs). Entities and relations are in id order.
+    pub fn to_json(&self) -> String {
+        let doc = JsonGraph {
+            version: 1,
+            next_entity: self.next_entity,
+            next_relation: self.next_relation,
+            entities: self
+                .entities
+                .iter()
+                .map(|(id, label)| JsonEntity {
+                    id: *id,
+                    label: label.clone(),
+                })
+                .collect(),
+            relations: self.relations.values().cloned().collect(),
+        };
+        serde_json::to_string(&doc).expect("a graph always serialises")
+    }
+
+    /// Parse the JSON form, enforcing the same invariants as [`Graph::from_text`].
+    pub fn from_json(json: &str) -> Result<Graph, GraphError> {
+        let bad = |m: &str| GraphError::Json(m.to_owned());
+        let doc: JsonGraph =
+            serde_json::from_str(json).map_err(|e| GraphError::Json(e.to_string()))?;
+        if doc.version != 1 {
+            return Err(bad("unsupported version"));
+        }
+        let mut g = Graph::new();
+        g.next_entity = doc.next_entity;
+        g.next_relation = doc.next_relation;
+        for e in doc.entities {
+            if g.entities.insert(e.id, e.label).is_some() {
+                return Err(bad("duplicate entity id"));
+            }
+        }
+        for r in doc.relations {
+            if !g.entities.contains_key(&r.from) || !g.entities.contains_key(&r.to) {
+                return Err(bad("relation names an entity that is not declared"));
+            }
+            g.out.entry(r.from).or_default().insert(r.id);
+            g.inc.entry(r.to).or_default().insert(r.id);
+            if g.relations.insert(r.id, r).is_some() {
+                return Err(bad("duplicate relation id"));
+            }
+        }
+        if g.entities.keys().any(|e| e.0 >= g.next_entity)
+            || g.relations.keys().any(|r| r.0 >= g.next_relation)
+        {
+            return Err(bad("an id is not below its counter"));
         }
         Ok(g)
     }

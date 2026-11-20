@@ -55,6 +55,11 @@ impl Vocabulary {
         self
     }
 
+    /// Every declaration, in relation-type order.
+    pub fn decls(&self) -> impl Iterator<Item = (&RelationType, &RelationDecl)> {
+        self.decls.iter()
+    }
+
     /// What is declared about `rtype`, if anything.
     pub fn decl(&self, rtype: &RelationType) -> Option<&RelationDecl> {
         self.decls.get(rtype)

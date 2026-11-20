@@ -10,6 +10,11 @@ authors.workspace = true
 
 [dependencies]
 semanticant-core = "0.1.0"
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+# serde derives for the shared types, used by the other crates' `json` features
+json = ["dep:serde"]
 
 [lints]
 workspace = true

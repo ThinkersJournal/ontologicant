@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.0.3 (not published)
+
+- Added `ontologicant-identity`: `IdentityIndex` (aliases, canonical ids, equivalence classes, merge / split / undo over an append-only
+  operation log), the `Matcher` trait with `ExactMatcher` and `NormalisedMatcher`, `MergeProposal` (proposing changes nothing; `apply` is a
+  separate logged step), and a line-oriented text form that replays the log.
+- Added `ontologicant-constraints`: `ConstraintSet` (disjoint, cardinality, domain, range, functional, inverse-functional, irreflexive) as
+  data with a text form, `from_vocabulary`, and `check` returning a `Report` whose every `Violation` has entities and reasons.
+  `ontologicant-kinds`: `Vocabulary::decls()` (additive).
+- Feature `json` (off by default) on core, graph, identity and constraints: serde derives on the shared types and `to_json` / `from_json` on
+  `Graph`, `IdentityIndex` and `ConstraintSet`, validated like the text forms (`from_json` replays the identity log). `GraphError::Json` and
+  `IdentityError::Json` added. CI now also runs clippy and the tests with `--all-features`.
+- Feature `petgraph` on `ontologicant-graph` (off by default): `Graph::to_petgraph` (a `StableGraph` whose weights keep our ids, labels and relations;
+  parallel relations stay separate edges) and `Graph::from_petgraph`. The own store stays the core; this is interop only.
+
 ## 0.0.2 (not published)
 
 - Added `ontologicant-kinds`: `Order`, `Taxonomy`, `Mereology` (axioms only when selected), `Vocabulary` and `Closure`.
