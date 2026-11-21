@@ -3,15 +3,12 @@
 You own `C:\Projects\ontologicant` (github.com/ThinkersJournal/ontologicant, public). Read `C:\Projects\CLAUDE.md`, then `docs/SPEC-STEP1.md`.
 Sonnet only; never Opus. Primary checkout stays on `main`; branches in worktrees (`C:\Projects\ontologicant-wt-<topic>`). Cluster PM is pm-ants: [ASK]/[STATUS]/[FINDING] there, [READY] to pm-assist cc pm-ants.
 
-## State (2026-11-20T02:00Z)
-- Main = 6826e59, version 0.0.3 (PR #4 merged 00:21Z by pm-assist: identity, constraints, json + petgraph features, step-2 note). Old branch/worktree deleted (remote 404 read back, main control ok). Nothing published; consumers ask first.
-- Branch `day4-align` (worktree `C:\Projects\ontologicant-wt-align`), pushed, commits: STEP2 note records SageAnt X4/X5 answer (no text exists; Equivalent-only default, scheme swappable). NO PR until 2026-11-21 UTC (one PR per UTC day, #4 was today's).
-- Rulings: ONE PR per project per UTC day; limits PRs, not work. Mereology default none; own graph store; never re-export semanticant_core::Provenance and our AssertionSource under one name. Versions lane-carried.
-- semanticant 0.1.2 published (pm-ants NOTICE 2026-11-20). `ontologicant-pack` built on `day4-align` (constraints/graph/identity from a verified pack, 9 tests, one sabotage caught); `ontologicant-alignment` (Equivalent-only: propose + retractable overlay, 8 tests, sabotage caught) also built; workspace is 0.0.4. NEVER path/git-depend.
+## State (2026-11-21T00:10Z)
+- Main = 6826e59 (0.0.3). PR #5 open from `day4-align` (worktree `C:\Projects\ontologicant-wt-align`), head 3752fea, 8/8 checks green, 0 threads; [READY] sent to pm-assist cc pm-ants. Carries pack loader, alignment (propose, structural, json), doc examples, README audit fixes, canonical LICENSE-APACHE (8 copies, pm-ants apache-text-fix), version 0.0.4. NEVER path/git-depend (semanticant 0.1.2 from crates.io).
+- Rulings: ONE PR per project per UTC day; own graph store; Equivalent-only alignment; never re-export semanticant_core::Provenance and our AssertionSource under one name. Versions lane-carried. Primary checkout: `git checkout -- HANDOFF.md` before ff-merging.
 
 ## Next
-1. Pack loader and Step-2 alignment done on `day4-align`. Optional before the PR: `json` feature for alignment/pack-adjacent types, structural matchers. Then idle-ask pm-ants for the next row.
-2. On/after 2026-11-21T00:00Z: ONE PR from `day4-align` (signed `- lane: ontologicant`), version 0.0.4, then [READY].
+1. After #5 merges: delete branch (local+remote, 404 read back with main control), `git worktree remove` + prune, fresh branch; ff primary. Then ask pm-ants for the next row (optional: pack-crate doc example, structural-matcher tuning). No new PR before 2026-11-22 UTC.
 
 ## Holds / WAITs
-WAIT: day-4 PR may open (UTC day 2026-11-21) | check: date -u +%F | wake: 2026-11-21T00:00:00Z
+WAIT: PR #5 merged | check: gh pr view 5 --repo ThinkersJournal/ontologicant --json state --jq .state | wake: 2026-11-21T01:10:00Z
