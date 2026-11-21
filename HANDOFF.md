@@ -1,14 +1,16 @@
-# HANDOFF: ontologicant (updated 2026-11-20)
+# HANDOFF: ontologicant (updated 2026-11-21)
 
 You own `C:\Projects\ontologicant` (github.com/ThinkersJournal/ontologicant, public). Read `C:\Projects\CLAUDE.md`, then `docs/SPEC-STEP1.md`.
 Sonnet only; never Opus. Primary checkout stays on `main`; branches in worktrees (`C:\Projects\ontologicant-wt-<topic>`). Cluster PM is pm-ants: [ASK]/[STATUS]/[FINDING] there, [READY] to pm-assist cc pm-ants.
 
-## State (2026-11-21T00:10Z)
-- Main = 6826e59 (0.0.3). PR #5 open from `day4-align` (worktree `C:\Projects\ontologicant-wt-align`), head 3752fea, 8/8 checks green, 0 threads; [READY] sent to pm-assist cc pm-ants. Carries pack loader, alignment (propose, structural, json), doc examples, README audit fixes, canonical LICENSE-APACHE (8 copies, pm-ants apache-text-fix), version 0.0.4. NEVER path/git-depend (semanticant 0.1.2 from crates.io).
-- Rulings: ONE PR per project per UTC day; own graph store; Equivalent-only alignment; never re-export semanticant_core::Provenance and our AssertionSource under one name. Versions lane-carried. Primary checkout: `git checkout -- HANDOFF.md` before ff-merging.
+## State (2026-11-21T00:30Z)
+- Main = 8792a29, version 0.0.4 (PR #5 merged by pm-assist: pack loader, alignment propose/structural/json, doc examples, README audit fixes, canonical LICENSE-APACHE). day4-align deleted (remote 404 read back, main control ok), worktree removed.
+- Fresh branch `day5-next` (worktree `C:\Projects\ontologicant-wt-next`) at main. Today's PR (UTC 2026-11-21) is spent: next PR not before 2026-11-22T00:00Z, version 0.0.5 lane-carried.
+- Rulings: ONE PR per project per UTC day; own graph store; Equivalent-only alignment; never re-export semanticant_core::Provenance and our AssertionSource under one name. NEVER path/git-depend (semanticant 0.1.2 from crates.io).
 
 ## Next
-1. After #5 merges: delete branch (local+remote, 404 read back with main control), `git worktree remove` + prune, fresh branch; ff primary. Then ask pm-ants for the next row (optional: pack-crate doc example, structural-matcher tuning). No new PR before 2026-11-22 UTC.
+1. Ask pm-ants for the next row (idle-ask sent 2026-11-21). Optional meanwhile: pack-crate doc example, structural-matcher tuning, CHANGELOG 0.0.5 entry.
+2. On/after 2026-11-22T00:00Z: ONE PR from `day5-next` (signed `- lane: ontologicant`), then [READY].
 
 ## Holds / WAITs
-WAIT: PR #5 merged | check: gh pr view 5 --repo ThinkersJournal/ontologicant --json state --jq .state | wake: 2026-11-21T01:10:00Z
+WAIT: day-5 PR may open (UTC day 2026-11-22) | check: date -u +%F | wake: 2026-11-22T00:00:00Z
