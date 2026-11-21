@@ -1,0 +1,23 @@
+[package]
+name = "ontologicant-alignment"
+description = "OntologicAnt alignment (Equivalent only): proposals that entities in two named graphs are the same thing, accepted as a logged, undoable overlay that never changes either graph"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+ontologicant-core = { version = "=0.0.4", path = "../ontologicant-core" }
+ontologicant-graph = { version = "=0.0.4", path = "../ontologicant-graph" }
+ontologicant-identity = { version = "=0.0.4", path = "../ontologicant-identity" }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+[features]
+# `Alignment::to_json` / `from_json`
+json = ["dep:serde", "dep:serde_json"]
+
+[lints]
+workspace = true

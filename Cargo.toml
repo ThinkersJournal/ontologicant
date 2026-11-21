@@ -1,9 +1,9 @@
 [workspace]
 resolver = "3"
-members = ["crates/ontologicant-core", "crates/ontologicant-graph", "crates/ontologicant-kinds", "crates/ontologicant-identity", "crates/ontologicant-constraints"]
+members = ["crates/ontologicant-core", "crates/ontologicant-graph", "crates/ontologicant-kinds", "crates/ontologicant-identity", "crates/ontologicant-constraints", "crates/ontologicant-pack", "crates/ontologicant-alignment"]
 
 [workspace.package]
-version = "0.0.3"
+version = "0.0.4"
 edition = "2024"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.0.4 (not published)
+
+- Added `ontologicant-pack`: reads a `ConstraintSet`, `Graph` or `IdentityIndex` from a data pack already opened and verified by
+  `semanticant-pack` 0.1.2 (crates.io), checking the manifest `kind` first and returning each value with a `pack:<name>@<version>`
+  `AssertionSource`. Typed `LoadError`; `open_*` helpers open from a directory. Consumes the pack loader, does not copy it.
+- `ontologicant-core` now depends on `semanticant-core` 0.1.2 (was 0.1.0).
+- Added `ontologicant-alignment` (Step 2, `Equivalent` only): `propose` compares two named graphs (labels plus identity aliases) with a `Matcher`
+  and returns `Correspondence` proposals with reasons; `Alignment` is an append-only, retractable overlay (transitive, symmetric `equivalent`;
+  text form that replays) and never mutates either graph. `Relation` is `non_exhaustive`; `GraphName` is a validated string until SageAnt fixes
+  cross-graph addressing.
+- `ontologicant-alignment`: `propose_structural` (shared anchored neighbours only; documented as shape-only, no names, types or semantics, and
+  nothing without anchors) and an optional `json` feature (`Alignment::to_json` / `from_json`, validated through the text form; serde and
+  serde_json, both already in the tree, off by default).
+
 ## 0.0.3 (not published)
 
 - Added `ontologicant-identity`: `IdentityIndex` (aliases, canonical ids, equivalence classes, merge / split / undo over an append-only

@@ -8,6 +8,26 @@
 //!
 //! "Of kind `k`" means: the entity is `k` or is below `k` in the taxonomy. Cardinalities count relations, so two parallel
 //! relations count twice; functional and inverse-functional count *distinct* ends, so a repeated assertion is not a clash.
+//!
+//! # Example
+//! ```
+//! use ontologicant_constraints::{Constraint, ConstraintSet};
+//! use ontologicant_graph::{AssertionSource, Graph, GraphStore, RelationType};
+//!
+//! let mut g = Graph::new();
+//! let (cat, dog, tom) = (g.add_entity("cat"), g.add_entity("dog"), g.add_entity("tom"));
+//! let isa = RelationType::new("is-a");
+//! let src = AssertionSource::asserted("example");
+//! g.add_relation(tom, isa.clone(), cat, src.clone()).unwrap();
+//! g.add_relation(tom, isa.clone(), dog, src).unwrap(); // tom is both
+//!
+//! let mut set = ConstraintSet::new();
+//! set.add(Constraint::Disjoint { a: cat, b: dog });
+//! let report = set.check(&g, &isa).unwrap();
+//! assert!(!report.is_consistent());
+//! assert_eq!(report.violations[0].entities[0], tom); // the offender first
+//! assert!(!report.violations[0].reasons.is_empty()); // and why
+//! ```
 #![forbid(unsafe_code)]
 
 use std::collections::BTreeSet;
