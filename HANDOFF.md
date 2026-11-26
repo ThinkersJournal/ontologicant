@@ -8,8 +8,8 @@ Sonnet only; never Opus. Primary checkout stays on `main`; branches in worktrees
 - Rulings: ONE PR per project per UTC day; own graph store; Equivalent-only alignment; never re-export semanticant_core::Provenance and AssertionSource under one name. NEVER path/git-depend.
 
 ## Next
-1. When #6 checks finish: read portfolio advisory job by check name; disposition any new Medium (never revert/configure out); send [READY] to pm-assist cc pm-ants (signed `- lane: ontologicant`). No pushes after [READY] without telling pm-assist.
+1. #6 is READY (head ec49403, 8/8 pass); no pushes without telling pm-assist. Soft-stopped per pm-ants TASK (no row).
 2. After merge: delete branch + worktree, fresh branch; ask pm-ants for a row, else soft-stop.
 
 ## Holds / WAITs
-WAIT: PR #6 checks | check: gh pr checks 6 -R ThinkersJournal/ontologicant
+WAIT: #6 merged (gate) | check: gh pr view 6 -R ThinkersJournal/ontologicant --json state | then: delete branch day5-next (CLAUDE.md 3) + remove worktree, ask pm-ants for a row
