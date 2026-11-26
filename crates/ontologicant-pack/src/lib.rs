@@ -14,6 +14,53 @@
 //! Each result comes back in a [`Loaded`] with an [`AssertionSource`] naming the pack (`pack:<name>@<version>`), so
 //! callers can stamp what they assert from it. The pack's licence and credit stay on the pack's manifest
 //! (`semanticant_core::Provenance`); they are deliberately not folded into `AssertionSource`.
+//!
+//! # Example
+//!
+//! Build a verified graph pack in memory (a real one comes from [`Pack::open`]) and load it:
+//!
+//! ```
+//! use ontologicant_core::{AssertionSource, Origin, RelationType};
+//! use ontologicant_graph::{Graph, GraphStore};
+//! use ontologicant_pack::{graph, Pack, KIND_GRAPH};
+//! use semanticant_core::pack::{FileEntry, Manifest, Sha256Hex};
+//! use semanticant_core::Provenance;
+//! use semanticant_pack::sha256_hex;
+//! use std::collections::HashMap;
+//!
+//! let mut g = Graph::new();
+//! let cat = g.add_entity("cat");
+//! let animal = g.add_entity("animal");
+//! g.add_relation(cat, RelationType::new("is-a"), animal, AssertionSource::asserted("example"))
+//!     .unwrap();
+//! let body = g.to_text();
+//!
+//! let manifest = Manifest {
+//!     name: "demo".into(),
+//!     version: "1.2.3".into(),
+//!     kind: KIND_GRAPH.into(),
+//!     schema: 1,
+//!     lang: None,
+//!     provenance: Provenance {
+//!         source: "hand-written".into(),
+//!         licence: "MIT OR Apache-2.0".into(),
+//!         credit: "example".into(),
+//!         url: None,
+//!         retrieved: None,
+//!     },
+//!     files: vec![FileEntry {
+//!         name: "g.txt".into(),
+//!         sha256: Sha256Hex::parse(&sha256_hex(body.as_bytes())).unwrap(),
+//!     }],
+//! };
+//! let files = HashMap::from([("g.txt".to_owned(), body.into_bytes())]);
+//! let pack = Pack::from_parts(manifest, files).unwrap();
+//!
+//! let loaded = graph(&pack, "g.txt").unwrap();
+//! assert_eq!(loaded.value.entities().count(), 2);
+//! assert_eq!(loaded.source.source, "pack:demo@1.2.3");
+//! assert_eq!(loaded.source.origin, Origin::Asserted);
+//! ```
 
 use ontologicant_constraints::{ConstraintSet, ParseError};
 use ontologicant_core::AssertionSource;

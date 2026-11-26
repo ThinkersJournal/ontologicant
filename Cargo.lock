@@ -124,7 +124,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "ontologicant-alignment"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "ontologicant-core",
  "ontologicant-graph",
@@ -135,7 +135,7 @@ dependencies = [
 
 [[package]]
 name = "ontologicant-constraints"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "ontologicant-core",
  "ontologicant-graph",
@@ -146,7 +146,7 @@ dependencies = [
 
 [[package]]
 name = "ontologicant-core"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "semanticant-core",
  "serde",
@@ -154,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "ontologicant-graph"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "ontologicant-core",
  "petgraph",
@@ -164,7 +164,7 @@ dependencies = [
 
 [[package]]
 name = "ontologicant-identity"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "ontologicant-core",
  "serde",
@@ -173,7 +173,7 @@ dependencies = [
 
 [[package]]
 name = "ontologicant-kinds"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "ontologicant-core",
  "ontologicant-graph",
@@ -181,7 +181,7 @@ dependencies = [
 
 [[package]]
 name = "ontologicant-pack"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "ontologicant-constraints",
  "ontologicant-core",
