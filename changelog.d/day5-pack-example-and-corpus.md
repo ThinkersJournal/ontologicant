@@ -1,3 +1,0 @@
-- `ontologicant-pack`: a crate-level example that builds a graph pack in memory and loads it; it runs as a doc test.
-- `ontologicant-alignment`: a fixed **synthetic** corpus (`tests/structural_corpus.rs`: 5 seeds, 200 entities, 5 hubs; not real-world data) measures `propose_structural` and holds a floor on it. At main 8792a29 the current scorer gets precision@1 0.55 and recall@1 0.39 on that corpus, which says nothing about real graphs. A hub-damped alternative scored slightly worse (0.53 / 0.38) and was not adopted; the scorer is unchanged.
-- CI: portfolio workflow pin moved to coderipper 0.48.1 (467fd259); advisory job, no rule configured out.

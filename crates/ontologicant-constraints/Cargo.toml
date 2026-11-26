@@ -9,9 +9,9 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
-ontologicant-core = { version = "=0.0.4", path = "../ontologicant-core" }
-ontologicant-graph = { version = "=0.0.4", path = "../ontologicant-graph" }
-ontologicant-kinds = { version = "=0.0.4", path = "../ontologicant-kinds" }
+ontologicant-core = { version = "=0.0.5", path = "../ontologicant-core" }
+ontologicant-graph = { version = "=0.0.5", path = "../ontologicant-graph" }
+ontologicant-kinds = { version = "=0.0.5", path = "../ontologicant-kinds" }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 
